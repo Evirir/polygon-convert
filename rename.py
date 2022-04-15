@@ -15,7 +15,7 @@ POLYGON_INPUT_TEMPLATE = Template('$id')
 POLYGON_OUTPUT_TEMPLATE = Template('$id.a')
 CMS_INPUT_TEMPLATE = Template('input.${id}_$group')
 CMS_OUTPUT_TEMPLATE = Template('output.${id}_$group')
-GROUPS_REGEX = Template('.*_(?:$groups)')
+GROUPS_REGEX = Template('.*_$groups')
 
 
 def dfs(dependencies: Dict[str, Set[str]], visited: Set[str], group: str) -> None:
