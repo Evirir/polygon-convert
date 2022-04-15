@@ -13,3 +13,4 @@ This code uses `problem.xml` in the Polygon package to retrieve information abou
 - Run this file.
 - A new folder `cms_tests` and a `.zip` file `cms.tests.zip` containing renamed tests will be created.
 - A string will also be outputted to the standard output and a new file `score_params.txt`. You should copy this to 
+the Score Parameters field in CMS (use GroupMin score type).
