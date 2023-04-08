@@ -3,14 +3,14 @@ outputs the Score Parameters string."""
 import json
 import os
 import shutil
+import sys
 import xml.etree.ElementTree as ET
 from string import Template
 from typing import Dict, List, Set
 
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-OLD_TESTS_DIR = os.path.join(BASE_DIR, 'tests')
-NEW_TESTS_DIR = os.path.join(BASE_DIR, 'cms_tests')
+OLD_TESTS_DIR = 'tests'
+NEW_TESTS_DIR = 'cms_tests'
 POLYGON_INPUT_TEMPLATE = Template('$id')
 POLYGON_OUTPUT_TEMPLATE = Template('$id.a')
 CMS_INPUT_TEMPLATE = Template('input.${id}_$group')
@@ -84,8 +84,7 @@ def rename_tests(tests: List[ET.Element]):
         os.rename(polygon_input_name, cms_input_name)
         os.rename(polygon_output_name, cms_output_name)
 
-    shutil.make_archive(os.path.join(BASE_DIR, 'cms_tests'),
-                        'zip', root_dir=NEW_TESTS_DIR)
+    shutil.make_archive('cms_tests', 'zip', root_dir=NEW_TESTS_DIR)
 
 
 def get_score_params(groups: List[ET.Element], dependencies: Dict[str, List[str]]) -> str:
@@ -102,14 +101,20 @@ def get_score_params(groups: List[ET.Element], dependencies: Dict[str, List[str]
 
 def main():
     """Main function."""
-    tree = ET.parse(os.path.join(BASE_DIR, 'problem.xml'))
+    if len(sys.argv) != 2:
+        print("Usage: rename.py [path to Polygon package root]")
+        return
+
+    os.chdir(sys.argv[1])
+
+    tree = ET.parse('problem.xml')
     groups = tree.find('judging/testset/groups').findall('group')
     tests = tree.find('judging/testset/tests')
 
     dependencies = parse_dependencies(groups)
     rename_tests(tests)
     score_params = get_score_params(groups, dependencies)
-    with open(os.path.join(BASE_DIR, 'score_params.txt'), 'w', encoding='UTF-8') as file:
+    with open('score_params.txt', 'w', encoding='UTF-8') as file:
         file.write(f'{score_params}')
     print(f'CMS Score Parameters:\n{score_params}')
 
