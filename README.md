@@ -2,7 +2,7 @@
 
 This file creates a copy of the tests, renames the tests and outputs a string that can be used
 for the `Score Parameters` field (use `GroupMin` score type) for Contest Management System (CMS).
-The renamed tests and the score parameters simulates Polygon's subtask (groups) system in CMS.
+The renamed tests and the score parameters capture Polygon's subtasks (groups) and dependencies in CMS.
 
 This code uses `problem.xml` in the Polygon **full** package (either Windows or Linux is fine) to retrieve information about subtasks.
 
