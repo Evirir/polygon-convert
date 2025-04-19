@@ -8,6 +8,7 @@ This code uses `problem.xml` in the Polygon **full** package (either Windows or 
 
 ## How To Use
 
+- All groups must use the `COMPLETE_GROUP` points policy.
 - Generate a **full** package on Polygon for your problem and download the Linux version.
 - Run this file: `python rename.py root_path`, where `root_path` is the path to the Polygon **full** package's root directory (where the folders `statements/` and `tests/` are).
 - A new folder `cms_tests` and a `.zip` file `cms_tests.zip` containing renamed tests will be created in `root_path`.
