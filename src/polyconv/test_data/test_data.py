@@ -4,7 +4,6 @@ outputs the Score Parameters string."""
 import json
 import os
 import shutil
-import sys
 import xml.etree.ElementTree as ET
 from string import Template
 
@@ -108,13 +107,17 @@ def get_score_params(
     return json.dumps(score_params)
 
 
-def to_cms():
-    """Main function."""
-    if len(sys.argv) != 2:
-        print("Usage: rename.py [path to Polygon package root]")
-        return
+def generate_cms_tests(polygon_path: str | os.PathLike):
+    """Copy and rename tests from Polygon to CMS format. Create a folder with the tests
+    and a zip file with the tests. Returns the Score Parameters string.
 
-    os.chdir(sys.argv[1])
+    The tests are renamed to CMS format with groups appended. The Score Parameters string implements
+    Polygon's subtask dependencies.
+
+    Args:
+        polygon_path (str | os.PathLike): The path to the Polygon package folder.
+    """
+    os.chdir(polygon_path)
 
     tree = ET.parse("problem.xml")
     groups = tree.find("judging/testset/groups").findall("group")
@@ -125,7 +128,4 @@ def to_cms():
     score_params = get_score_params(groups, dependencies)
     with open("score_params.txt", "w", encoding="UTF-8") as file:
         file.write(f"{score_params}")
-    print(f"CMS Score Parameters:\n{score_params}")
-
-if __name__ == "__main__":
-    to_cms()
+    return score_params

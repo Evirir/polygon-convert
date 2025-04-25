@@ -16,6 +16,9 @@ classifiers = [
 license = "GPL-3.0-or-later"
 license-files = ["LICEN[CS]E*"]
 
+[project.scripts]
+polyconv = "polyconv.cli.main:main"
+
 [project.urls]
 Homepage = "https://github.com/Evirir/polygon-convert"
 Issues = "https://github.com/Evirir/polygon-convert/issues"
