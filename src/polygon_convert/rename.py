@@ -108,7 +108,7 @@ def get_score_params(
     return json.dumps(score_params)
 
 
-def main():
+def to_cms():
     """Main function."""
     if len(sys.argv) != 2:
         print("Usage: rename.py [path to Polygon package root]")
@@ -127,6 +127,5 @@ def main():
         file.write(f"{score_params}")
     print(f"CMS Score Parameters:\n{score_params}")
 
-
 if __name__ == "__main__":
-    main()
+    to_cms()
