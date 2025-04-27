@@ -2,13 +2,13 @@
 outputs the Score Parameters string."""
 
 import json
-import os
 import shutil
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from string import Template
 
-OLD_TESTS_DIR = "tests"
-NEW_TESTS_DIR = "cms_tests"
+POLYGON_TESTS_DIR = "tests"
+DEFAULT_CMS_TESTS_DIR = "cms_tests"
 POLYGON_INPUT_TEMPLATE = Template("$id")
 POLYGON_OUTPUT_TEMPLATE = Template("$id.a")
 CMS_INPUT_TEMPLATE = Template("input.${id}_$group")
@@ -56,39 +56,57 @@ def parse_dependencies(groups: list[ET.Element]) -> dict[str, list[str]]:
     return dependencies
 
 
-def rename_tests(tests: list[ET.Element]):
+def rename_tests(
+    tests: ET.Element[str],
+    polygon_path: Path,
+    output_path: Path,
+    overwrite: bool = False,
+) -> None:
     """Create a copy of tests from Polygon and rename them to CMS format with groups appended,
-    in a zip file."""
+    in a zip file.
+
+    Args:
+        tests (ET.Element): The tests element from the XML tree.
+        polygon_path (Path): The path to the Polygon package folder.
+        output_path (Path): The path to the output folder.
+        overwrite (bool, optional): If True, overwrite the existing tests. If not, raise an error
+            if the folder already exists. Defaults to False.
+    """
 
     # Check if cms_tests/ exists, delete if true
-    if os.path.exists(NEW_TESTS_DIR) and os.path.isdir(NEW_TESTS_DIR):
-        shutil.rmtree(NEW_TESTS_DIR)
-    shutil.copytree(OLD_TESTS_DIR, NEW_TESTS_DIR, dirs_exist_ok=True)
+    if output_path.exists():
+        if not overwrite:
+            raise FileExistsError(
+                "The output folder already exists. Delete it or use the --force flag to overwrite."
+            )
+
+        shutil.rmtree(output_path)
+    shutil.copytree(polygon_path / POLYGON_TESTS_DIR, output_path, dirs_exist_ok=True)
+
+    cms_tests_dir = output_path / DEFAULT_CMS_TESTS_DIR
 
     width = len(str(len(tests)))
     for test_id, test in enumerate(tests):
         test_id_str = str(test_id + 1).zfill(width)
         group = test.get("group")
 
-        polygon_input_name = os.path.join(
-            NEW_TESTS_DIR,
-            POLYGON_INPUT_TEMPLATE.substitute(id=test_id_str, group=group),
+        polygon_input_name = cms_tests_dir / POLYGON_INPUT_TEMPLATE.substitute(
+            id=test_id_str, group=group
         )
-        polygon_output_name = os.path.join(
-            NEW_TESTS_DIR,
-            POLYGON_OUTPUT_TEMPLATE.substitute(id=test_id_str, group=group),
+        polygon_output_name = cms_tests_dir / POLYGON_OUTPUT_TEMPLATE.substitute(
+            id=test_id_str, group=group
         )
-        cms_input_name = os.path.join(
-            NEW_TESTS_DIR, CMS_INPUT_TEMPLATE.substitute(id=test_id_str, group=group)
+        cms_input_name = cms_tests_dir / CMS_INPUT_TEMPLATE.substitute(
+            id=test_id_str, group=group
         )
-        cms_output_name = os.path.join(
-            NEW_TESTS_DIR, CMS_OUTPUT_TEMPLATE.substitute(id=test_id_str, group=group)
+        cms_output_name = cms_tests_dir / CMS_OUTPUT_TEMPLATE.substitute(
+            id=test_id_str, group=group
         )
 
-        os.rename(polygon_input_name, cms_input_name)
-        os.rename(polygon_output_name, cms_output_name)
+        polygon_input_name.rename(cms_input_name)
+        polygon_output_name.rename(cms_output_name)
 
-    shutil.make_archive("cms_tests", "zip", root_dir=NEW_TESTS_DIR)
+    shutil.make_archive("cms_tests", "zip", root_dir=cms_tests_dir)
 
 
 def get_score_params(
@@ -107,7 +125,9 @@ def get_score_params(
     return json.dumps(score_params)
 
 
-def generate_cms_tests(polygon_path: str | os.PathLike):
+def generate_cms_tests(
+    polygon_path: Path, output_path: Path = None, overwrite: bool = False
+) -> str:
     """Copy and rename tests from Polygon to CMS format. Create a folder with the tests
     and a zip file with the tests. Returns the Score Parameters string.
 
@@ -115,16 +135,22 @@ def generate_cms_tests(polygon_path: str | os.PathLike):
     Polygon's subtask dependencies.
 
     Args:
-        polygon_path (str | os.PathLike): The path to the Polygon package folder.
+        polygon_path (Path): The path to the Polygon package folder.
+        output_path (Path, optional): The path to the output folder. If None, this will be
+            `<polygon_path>/cms_out`. Defaults to None.
+        overwrite (bool, optional): If True, overwrite the existing tests. Defaults to False.
     """
-    os.chdir(polygon_path)
+    if output_path is None:
+        output_path = polygon_path / "cms_out"
 
-    tree = ET.parse("problem.xml")
+    tree = ET.parse(polygon_path / "problem.xml")
     groups = tree.find("judging/testset/groups").findall("group")
     tests = tree.find("judging/testset/tests")
+    if tests is None:
+        raise ValueError("No tests found in problem.xml.")
 
     dependencies = parse_dependencies(groups)
-    rename_tests(tests)
+    rename_tests(tests, polygon_path, output_path, overwrite=overwrite)
     score_params = get_score_params(groups, dependencies)
     with open("score_params.txt", "w", encoding="UTF-8") as file:
         file.write(f"{score_params}")

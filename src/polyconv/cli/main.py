@@ -20,7 +20,7 @@ def make_parser() -> ArgumentParser:
 def generate_test_data(args: Namespace):
     """Generate test data and score parameters for CMS from Polygon tests."""
     polygon_path = Path(args.polygon_path).resolve()
-    score_params = generate_cms_tests(polygon_path)
+    score_params = generate_cms_tests(polygon_path, output_path=None, overwrite=False)
     print(f"CMS Score Parameters:\n{score_params}")
 
 
