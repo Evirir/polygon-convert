@@ -4,19 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "polygon-convert"
-version = "0.0.1"
-authors = [
-  { name="Evirir", email="gojunxing@gmail.com" },
-]
+version = "0.1.1"
+authors = [{ name = "Evirir", email = "gojunxing@gmail.com" }]
 description = "Convert Polygon packages to other formats, notably to CMS."
 readme = "README.md"
 requires-python = ">=3.13"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
 ]
 license = "GPL-3.0-or-later"
 license-files = ["LICEN[CS]E*"]
+
+[project.scripts]
+polyconv = "polyconv.cli.main:main"
 
 [project.urls]
 Homepage = "https://github.com/Evirir/polygon-convert"
