@@ -11,7 +11,9 @@ This code uses `problem.xml` in the Polygon **full** package (either Windows or 
 - Install this package: `pip install polyconv`
 - All groups must use the `COMPLETE_GROUP` points policy.
 - Generate a **full** package on Polygon for your problem and download the Linux version.
-- Run this file: `polyconv root_path`, where `root_path` is the path to the Polygon **full** package's root directory (where the folders `statements/` and `tests/` are).
-- A new folder `cms_tests` and a `.zip` file `cms_tests.zip` containing renamed tests will be created in `root_path`.
-- A string will also be outputted to the standard output and a new file `score_params.txt`. You should copy this to
-the Score Parameters field in CMS (use GroupMin score type).
+- Run this file: `polyconv polygon_path`, where `polygon_path` is the path to the Polygon **full** package's root directory (where the folders `statements/` and `tests/` are). Add the `-f` flag to overwrite files if they exist.
+- A new folder `cms_out` will be created in `polygon_path` (this can be changed with `-o`) containing the following:
+  - A folder `tests/` containing renamed tests.
+  - A `.zip` file `tests.zip` with the contents in the `tests/` folder above.
+  - A `score_params.txt` file with the score parameters string. You should copy this to the Score Parameters field in CMS (use GroupMin score type).
+- The string in `score_params.txt` will also be output to the standard output.

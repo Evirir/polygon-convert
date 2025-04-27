@@ -8,12 +8,15 @@ from pathlib import Path
 from string import Template
 
 POLYGON_TESTS_DIR = "tests"
-DEFAULT_CMS_TESTS_DIR = "cms_tests"
+DEFAULT_OUT_DIR = "cms_out"
+DEFAULT_CMS_TESTS_DIR = "tests"
+DEFAULT_CMS_TESTS_ZIP_NAME = "tests"
 POLYGON_INPUT_TEMPLATE = Template("$id")
 POLYGON_OUTPUT_TEMPLATE = Template("$id.a")
-CMS_INPUT_TEMPLATE = Template("input.${id}_$group")
-CMS_OUTPUT_TEMPLATE = Template("output.${id}_$group")
-GROUPS_REGEX = Template(".*_(?:$groups)")
+DEFAULT_CMS_INPUT_TEMPLATE = Template("input.${id}_$group")
+DEFAULT_CMS_OUTPUT_TEMPLATE = Template("output.${id}_$group")
+DEFAULT_GROUPS_REGEX = Template(".*_($groups)")
+DEFAULT_SCORE_PARAMS_FILENAME = "score_params.txt"
 
 
 def dfs(dependencies: dict[str, set[str]], visited: set[str], group: str) -> None:
@@ -57,7 +60,7 @@ def parse_dependencies(groups: list[ET.Element]) -> dict[str, list[str]]:
 
 
 def rename_tests(
-    tests: ET.Element[str],
+    tests: ET.Element,
     polygon_path: Path,
     output_path: Path,
     overwrite: bool = False,
@@ -81,9 +84,9 @@ def rename_tests(
             )
 
         shutil.rmtree(output_path)
-    shutil.copytree(polygon_path / POLYGON_TESTS_DIR, output_path, dirs_exist_ok=True)
 
     cms_tests_dir = output_path / DEFAULT_CMS_TESTS_DIR
+    shutil.copytree(polygon_path / POLYGON_TESTS_DIR, cms_tests_dir, dirs_exist_ok=True)
 
     width = len(str(len(tests)))
     for test_id, test in enumerate(tests):
@@ -96,17 +99,19 @@ def rename_tests(
         polygon_output_name = cms_tests_dir / POLYGON_OUTPUT_TEMPLATE.substitute(
             id=test_id_str, group=group
         )
-        cms_input_name = cms_tests_dir / CMS_INPUT_TEMPLATE.substitute(
+        cms_input_name = cms_tests_dir / DEFAULT_CMS_INPUT_TEMPLATE.substitute(
             id=test_id_str, group=group
         )
-        cms_output_name = cms_tests_dir / CMS_OUTPUT_TEMPLATE.substitute(
+        cms_output_name = cms_tests_dir / DEFAULT_CMS_OUTPUT_TEMPLATE.substitute(
             id=test_id_str, group=group
         )
 
         polygon_input_name.rename(cms_input_name)
         polygon_output_name.rename(cms_output_name)
 
-    shutil.make_archive("cms_tests", "zip", root_dir=cms_tests_dir)
+    shutil.make_archive(
+        output_path / DEFAULT_CMS_TESTS_ZIP_NAME, "zip", root_dir=cms_tests_dir
+    )
 
 
 def get_score_params(
@@ -121,7 +126,9 @@ def get_score_params(
             points = 0
         points = int(float(points))
         groups_str = "|".join(dependencies[name])
-        score_params.append([points, GROUPS_REGEX.substitute(groups=groups_str)])
+        score_params.append(
+            [points, DEFAULT_GROUPS_REGEX.substitute(groups=groups_str)]
+        )
     return json.dumps(score_params)
 
 
@@ -141,7 +148,7 @@ def generate_cms_tests(
         overwrite (bool, optional): If True, overwrite the existing tests. Defaults to False.
     """
     if output_path is None:
-        output_path = polygon_path / "cms_out"
+        output_path = polygon_path / DEFAULT_OUT_DIR
 
     tree = ET.parse(polygon_path / "problem.xml")
     groups = tree.find("judging/testset/groups").findall("group")
@@ -152,6 +159,8 @@ def generate_cms_tests(
     dependencies = parse_dependencies(groups)
     rename_tests(tests, polygon_path, output_path, overwrite=overwrite)
     score_params = get_score_params(groups, dependencies)
-    with open("score_params.txt", "w", encoding="UTF-8") as file:
-        file.write(f"{score_params}")
+    with open(
+        output_path / DEFAULT_SCORE_PARAMS_FILENAME, "w", encoding="utf-8"
+    ) as file:
+        file.write(score_params)
     return score_params
