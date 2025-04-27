@@ -1,5 +1,7 @@
 # Polygon converter
 
+![PyPI](https://img.shields.io/pypi/v/PACKAGE?label=pypi%20package)
+
 This package creates a copy of the tests, renames the tests and outputs a string that can be used
 for the `Score Parameters` field (use `GroupMin` score type) for Contest Management System (CMS).
 The renamed tests and the score parameters capture Polygon's subtasks (groups) and dependencies in CMS.
