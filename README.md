@@ -1,6 +1,6 @@
 # Polygon converter
 
-[![PyPI](https://img.shields.io/pypi/v/PACKAGE?label=pypi%20package)](https://pypi.org/project/polyconv/)
+[![PyPI](https://img.shields.io/pypi/v/polyconv)](https://pypi.org/project/polyconv/)
 
 Polygon refers to Codeforces' [Polygon](https://polygon.codeforces.com/).
 
