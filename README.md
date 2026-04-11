@@ -10,7 +10,7 @@ This code uses `problem.xml` in the Polygon **full** package (either Windows or 
 
 ## How To Use
 
-- Install this package: `pip install polyconv`
+- Install this package: `pip install polygon-convert`
 - All groups must use the `COMPLETE_GROUP` points policy.
 - Generate a **full** package on Polygon for your problem and download the Linux version.
 - Run this file: `polyconv polygon_path`, where `polygon_path` is the path to the Polygon **full** package's root directory (where the folders `statements/` and `tests/` are). Add the `-f` flag to overwrite files if they exist.
