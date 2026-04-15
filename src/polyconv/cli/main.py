@@ -1,4 +1,4 @@
-"""The command line interface for polygon_convert. The command is `polyconv`."""
+"""The command line interface for polyconv. The command is `polyconv`."""
 
 import sys
 from argparse import ArgumentParser, Namespace
@@ -8,11 +8,7 @@ from polyconv.test_data import DEFAULT_OUT_DIR, generate_cms_tests
 
 
 def make_parser() -> ArgumentParser:
-    """Create the command line parser for the polygon_convert CLI.
-
-    Returns:
-        ArgumentParser: _description_
-    """
+    """Create the command line parser for the polyconv CLI."""
     parser = ArgumentParser()
     parser.add_argument("polygon_path", help="Path to the Polygon package folder.")
     parser.add_argument(
@@ -23,7 +19,8 @@ def make_parser() -> ArgumentParser:
         "-o",
         type=str,
         default=None,
-        help=f"Path to the output folder. Defaults to <polygon_path>/{DEFAULT_OUT_DIR}.",
+        help="Path to the output folder. Defaults to "
+        f"<polygon_path>/{DEFAULT_OUT_DIR}.",
     )
     return parser
 

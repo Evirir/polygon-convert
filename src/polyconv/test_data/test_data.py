@@ -45,18 +45,21 @@ def parse_dependencies(groups: list[ET.Element]) -> dict[str, list[str]]:
 
     for group in groups:
         name = group.get("name")
+        if name is None:
+            raise ValueError("Group has no name")
         prereqs = group.find("dependencies")
         if prereqs is not None:
             prereqs = prereqs.findall("dependency")
         else:
             prereqs = []
-        dependencies[name] = {prereq.get("group") for prereq in prereqs}
+        dependencies[name] = set()
+        for prereq in prereqs:
+            if (prereq_group := prereq.get("group")) is None:
+                raise ValueError("Prerequisite is missing a group")
+            dependencies[name].add(prereq_group)
 
     copy_children_prereqs(dependencies)
-
-    for group, prereqs in dependencies.items():
-        dependencies[group] = sorted(prereqs)
-    return dependencies
+    return {group: sorted(prereqs) for group, prereqs in dependencies.items()}
 
 
 def rename_tests(
@@ -65,22 +68,23 @@ def rename_tests(
     output_path: Path,
     overwrite: bool = False,
 ) -> None:
-    """Create a copy of tests from Polygon and rename them to CMS format with groups appended,
-    in a zip file.
+    """Create a copy of tests from Polygon and rename them to CMS format with groups
+    appended, in a zip file.
 
     Args:
         tests (ET.Element): The tests element from the XML tree.
         polygon_path (Path): The path to the Polygon package folder.
         output_path (Path): The path to the output folder.
-        overwrite (bool, optional): If True, overwrite the existing tests. If not, raise an error
-            if the folder already exists. Defaults to False.
+        overwrite (bool, optional): If True, overwrite the existing tests. If not,
+            raise an error if the folder already exists. Defaults to False.
     """
 
     # Check if cms_tests/ exists, delete if true
     if output_path.exists():
         if not overwrite:
             raise FileExistsError(
-                "The output folder already exists. Delete it or use the --force flag to overwrite."
+                "The output folder already exists. Delete it or use the --force flag "
+                "to overwrite."
             )
 
         shutil.rmtree(output_path)
@@ -110,7 +114,9 @@ def rename_tests(
         polygon_output_name.rename(cms_output_name)
 
     shutil.make_archive(
-        output_path / DEFAULT_CMS_TESTS_ZIP_NAME, "zip", root_dir=cms_tests_dir
+        (output_path / DEFAULT_CMS_TESTS_ZIP_NAME).as_posix(),
+        "zip",
+        root_dir=cms_tests_dir,
     )
 
 
@@ -121,6 +127,8 @@ def get_score_params(
     score_params = []
     for group in groups:
         name = group.get("name")
+        if name is None:
+            raise ValueError("Group has no name")
         points = group.get("points")
         if points is None:
             points = 0
@@ -133,34 +141,37 @@ def get_score_params(
 
 
 def generate_cms_tests(
-    polygon_path: Path, output_path: Path = None, overwrite: bool = False
+    polygon_path: Path, output_path: Path | None = None, overwrite: bool = False
 ) -> str:
     """Copy and rename tests from Polygon to CMS format. Create a folder with the tests
     and a zip file with the tests. Returns the Score Parameters string.
 
-    The tests are renamed to CMS format with groups appended. The Score Parameters string implements
-    Polygon's subtask dependencies.
+    The tests are renamed to CMS format with groups appended. The Score Parameters
+    string implements Polygon's subtask dependencies.
 
     Args:
         polygon_path (Path): The path to the Polygon package folder.
-        output_path (Path, optional): The path to the output folder. If None, this will be
-            `<polygon_path>/cms_out`. Defaults to None.
-        overwrite (bool, optional): If True, overwrite the existing tests. Defaults to False.
+            output_path (Path, optional): The path to the output folder. If None, this
+            will be `<polygon_path>/cms_out`. Defaults to None.
+        overwrite (bool, optional): If True, overwrite the existing tests. Defaults to
+            False.
     """
     if output_path is None:
         output_path = polygon_path / DEFAULT_OUT_DIR
 
     tree = ET.parse(polygon_path / "problem.xml")
-    groups = tree.find("judging/testset/groups").findall("group")
+    groups = tree.findall("judging/testset/groups/group")
     tests = tree.find("judging/testset/tests")
     if tests is None:
         raise ValueError("No tests found in problem.xml.")
 
-    dependencies = parse_dependencies(groups)
     rename_tests(tests, polygon_path, output_path, overwrite=overwrite)
+
+    dependencies = parse_dependencies(groups)
     score_params = get_score_params(groups, dependencies)
     with open(
         output_path / DEFAULT_SCORE_PARAMS_FILENAME, "w", encoding="utf-8"
     ) as file:
         file.write(score_params)
+
     return score_params
